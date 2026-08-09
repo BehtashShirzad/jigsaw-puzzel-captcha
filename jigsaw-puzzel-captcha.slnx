@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/jigsaw-puzzel/jigsaw-puzzel.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/UnitTest/UnitTest.csproj" />
+  </Folder>
+</Solution>
