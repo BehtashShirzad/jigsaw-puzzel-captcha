@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/jigsaw-puzzel/jigsaw-puzzel.csproj" />
+    <Project Path="src/JigsawPuzzleCaptcha/JigsawPuzzleCaptcha.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/UnitTest/UnitTest.csproj" />

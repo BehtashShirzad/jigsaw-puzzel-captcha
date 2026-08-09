@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <RootNamespace>JigsawPuzzleCaptcha</RootNamespace>
+    <AssemblyName>JigsawPuzzleCaptcha</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>JigsawPuzzleCaptcha</PackageId>
+    <Title>Jigsaw Puzzle CAPTCHA</Title>
+    <Description>Generates slide-to-fit jigsaw puzzle CAPTCHA images for .NET. Produces a background with a puzzle-shaped hole and a matching draggable piece, plus tolerance-based answer validation. Built on ImageSharp, no System.Drawing dependency, cross-platform.</Description>
+    <PackageTags>captcha;jigsaw;puzzle;slider;slide-captcha;bot-protection;human-verification;imagesharp;aspnetcore</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>See https://github.com/BehtashShirzad/jigsaw-puzzle-captcha/releases</PackageReleaseNotes>
+    <!-- Add a 128x128 PNG at src/JigsawPuzzleCaptcha/icon.png, then uncomment: -->
+    <!-- <PackageIcon>icon.png</PackageIcon> -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+    <!-- <None Include="icon.png" Pack="true" PackagePath="\" /> -->
+  </ItemGroup>
+
+</Project>
