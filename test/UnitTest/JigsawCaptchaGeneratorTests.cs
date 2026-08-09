@@ -1,4 +1,5 @@
 using JigsawPuzzleCaptcha.Core;
+using JigsawPuzzleCaptcha.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Png;
