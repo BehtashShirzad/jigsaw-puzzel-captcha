@@ -14,9 +14,9 @@
     <Authors>Behtash Shirzad</Authors>
     <Copyright>Copyright (c) Behtash Shirzad</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/BehtashShirzad/jigsaw-puzzle-captcha</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/BehtashShirzad/jigsaw-puzzle-captcha</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/BehtashShirzad/jigsaw-puzzel-captcha</PackageProjectUrl>
+  <RepositoryUrl>https://github.com/BehtashShirzad/jigsaw-puzzel-captcha</RepositoryUrl>
+  <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <!-- Source Link + symbols. SourceLink ships in the .NET SDK, no extra package needed. -->
