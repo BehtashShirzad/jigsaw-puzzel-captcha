@@ -1,3 +1,5 @@
+using JigsawPuzzleCaptcha.Shapes;
+
 namespace JigsawPuzzleCaptcha.Core;
 
 /// <summary>
@@ -14,9 +16,10 @@ namespace JigsawPuzzleCaptcha.Core;
 /// This is not secret; the client needs it to place the piece.
 /// </param>
 /// <param name="PieceWidth">Width of the piece image in pixels.</param>
-/// <param name="PieceHeight">Height of the piece image in pixels (includes the tab overhang).</param>
+/// <param name="PieceHeight">Height of the piece image in pixels (includes the tab overhang, for shapes that have one).</param>
 /// <param name="BackgroundWidth">Width of the background image in pixels.</param>
 /// <param name="BackgroundHeight">Height of the background image in pixels.</param>
+/// <param name="Shape">The outline used for the piece. Not secret; useful if the client renders shape-specific UI.</param>
 public sealed record CaptchaResult(
     byte[] BackgroundImageBytes,
     byte[] PieceImageBytes,
@@ -25,7 +28,8 @@ public sealed record CaptchaResult(
     int PieceWidth,
     int PieceHeight,
     int BackgroundWidth,
-    int BackgroundHeight)
+    int BackgroundHeight,
+    PuzzleShapeKind Shape)
 {
     /// <summary>The background image as a <c>data:</c> URI, ready to drop into an <c>img</c> tag.</summary>
     public string BackgroundDataUri => "data:image/png;base64," + Convert.ToBase64String(BackgroundImageBytes);

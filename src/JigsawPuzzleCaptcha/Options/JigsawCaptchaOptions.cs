@@ -1,3 +1,5 @@
+using JigsawPuzzleCaptcha.Shapes;
+
 namespace JigsawPuzzleCaptcha.Options;
 
 /// <summary>
@@ -5,6 +7,13 @@ namespace JigsawPuzzleCaptcha.Options;
 /// </summary>
 public sealed class JigsawCaptchaOptions
 {
+    /// <summary>
+    /// The outline used for the puzzle piece. Default is <see cref="PuzzleShapeKind.Classic"/>.
+    /// Can be set once at registration or overridden per call, e.g.
+    /// <c>generator.Generate(bytes, new JigsawCaptchaOptions { Shape = PuzzleShapeKind.Hexagon })</c>.
+    /// </summary>
+    public PuzzleShapeKind Shape { get; set; } = PuzzleShapeKind.Classic;
+
     /// <summary>Width of the puzzle piece body, in pixels. Default is 60.</summary>
     public int PieceWidth { get; set; } = 60;
 
@@ -37,5 +46,6 @@ public sealed class JigsawCaptchaOptions
         if (Padding < 0) throw new ArgumentOutOfRangeException(nameof(Padding), Padding, "Padding cannot be negative.");
         if (Tolerance < 0) throw new ArgumentOutOfRangeException(nameof(Tolerance), Tolerance, "Tolerance cannot be negative.");
         if (TabRatio is < 0.05f or > 0.30f) throw new ArgumentOutOfRangeException(nameof(TabRatio), TabRatio, "TabRatio must be between 0.05 and 0.30.");
+        if (!Enum.IsDefined(Shape)) throw new ArgumentOutOfRangeException(nameof(Shape), Shape, "Unsupported puzzle shape.");
     }
 }

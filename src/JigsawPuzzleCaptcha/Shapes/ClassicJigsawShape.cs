@@ -1,23 +1,33 @@
+using JigsawPuzzleCaptcha.Contracts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing;
 
-namespace JigsawPuzzleCaptcha;
+namespace JigsawPuzzleCaptcha.Shapes;
 
 /// <summary>
-/// Builds the puzzle-piece outline: a rectangle with an outward tab on the top edge
+/// The original puzzle-piece outline: a rectangle with an outward tab on the top edge
 /// and an inward notch on the left edge.
 /// </summary>
 /// <remarks>
 /// The path is built in the coordinate space of the piece <em>canvas</em>, which is
-/// <c>PieceWidth x (PieceHeight + tabOffset)</c>. The rectangular body starts at
+/// <c>pieceWidth x (pieceHeight + tabOffset)</c>. The rectangular body starts at
 /// <c>y = tabOffset</c> so the tab has room to bulge upward without being clipped.
 /// </remarks>
-internal static class PuzzlePath
+internal sealed class ClassicJigsawShape : IPuzzlePieceShape
 {
     private const int ArcSegments = 24;
 
-    internal static IPath Create(int pieceWidth, int pieceHeight, float tabRadius, int tabOffset)
+    public (int CanvasWidth, int CanvasHeight) GetCanvasSize(int pieceWidth, int pieceHeight, float tabRatio)
     {
+        int tabOffset = GetTabOffset(pieceWidth, pieceHeight, tabRatio);
+        return (pieceWidth, pieceHeight + tabOffset);
+    }
+
+    public IPath CreatePath(int pieceWidth, int pieceHeight, float tabRatio)
+    {
+        float tabRadius = GetTabRadius(pieceWidth, pieceHeight, tabRatio);
+        int tabOffset = (int)MathF.Ceiling(tabRadius);
+
         float top = tabOffset;
         float bottom = tabOffset + pieceHeight;
         float right = pieceWidth;
@@ -53,6 +63,12 @@ internal static class PuzzlePath
         builder.CloseFigure();
         return builder.Build();
     }
+
+    private static float GetTabRadius(int pieceWidth, int pieceHeight, float tabRatio) =>
+        MathF.Min(pieceWidth, pieceHeight) * tabRatio;
+
+    private static int GetTabOffset(int pieceWidth, int pieceHeight, float tabRatio) =>
+        (int)MathF.Ceiling(GetTabRadius(pieceWidth, pieceHeight, tabRatio));
 
     /// <summary>
     /// Appends a polyline approximation of a circular arc. The point at

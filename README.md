@@ -82,19 +82,43 @@ record VerifyRequest(string Id, int X);
 
 | Option | Default | Purpose |
 | --- | --- | --- |
+| `Shape` | `Classic` | Outline of the piece — see [Piece shapes](#piece-shapes). |
 | `PieceWidth` | `60` | Width of the piece body, in pixels. |
 | `PieceHeight` | `60` | Height of the piece body, in pixels. |
 | `Padding` | `20` | Minimum gap kept between the slot and the image edges. |
 | `Tolerance` | `5` | Horizontal error, in pixels, still accepted by `Validate`. |
-| `TabRatio` | `0.15` | Tab and notch size, as a fraction of the smaller piece dimension. |
+| `TabRatio` | `0.15` | Tab and notch size, as a fraction of the smaller piece dimension. Only affects `Classic`. |
 
 Options can be set once at registration, or passed per call: `generator.Generate(bytes, options)`.
 
+## Piece shapes
+
+`JigsawCaptchaOptions.Shape` (`JigsawPuzzleCaptcha.Shapes.PuzzleShapeKind`) picks the piece outline:
+
+| Shape | Description |
+| --- | --- |
+| `Classic` (default) | Rectangle with an interlocking tab on top and a notch on the left — the original puzzle look. |
+| `Square` | A plain rectangular cutout, no tab or notch. |
+| `Triangle` | An isosceles triangle inscribed in the piece's bounding box. |
+| `Hexagon` | A regular, flat-top hexagon inscribed in the piece's bounding box. |
+| `Circle` | An ellipse inscribed in the piece's bounding box &#8212; a true circle when `PieceWidth == PieceHeight`. |
+
+Shapes are resolved through an internal factory keyed by `PuzzleShapeKind`, so picking one is just setting `Shape` on the options passed to `Generate` — no extra registration needed, and it can change per call/request, not only at DI setup time:
+
+```csharp
+CaptchaResult result = generator.Generate(source, new JigsawCaptchaOptions
+{
+    Shape = PuzzleShapeKind.Hexagon,
+});
+```
+
+Only `Classic` needs extra canvas height for the tab overhang; the other shapes stay inside `PieceWidth x PieceHeight`.
+
 ## Result
 
-`CaptchaResult` carries the two PNGs as `byte[]` (with `BackgroundDataUri` / `PieceDataUri` convenience properties), the answer `X`, the render position `Y`, and the dimensions of both images.
+`CaptchaResult` carries the two PNGs as `byte[]` (with `BackgroundDataUri` / `PieceDataUri` convenience properties), the answer `X`, the render position `Y`, the dimensions of both images, and the `Shape` that was used.
 
-`PieceHeight` on the result is larger than the configured `PieceHeight` — the canvas includes the tab that sticks out above the piece body.
+`PieceHeight` on the result can be larger than the configured `PieceHeight` for shapes that stick out of their bounding box (currently just `Classic`, whose canvas includes the tab).
 
 ## Security notes
 

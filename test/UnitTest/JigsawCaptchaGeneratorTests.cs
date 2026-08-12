@@ -1,5 +1,6 @@
 using JigsawPuzzleCaptcha.Core;
 using JigsawPuzzleCaptcha.Options;
+using JigsawPuzzleCaptcha.Shapes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Png;
@@ -139,5 +140,117 @@ public class JigsawCaptchaGeneratorTests
         var options = new JigsawCaptchaOptions { TabRatio = 0.9f };
 
         Assert.Throws<ArgumentOutOfRangeException>(() => options.Validate());
+    }
+
+    [Fact]
+    public void Options_InvalidShape_Throws()
+    {
+        var options = new JigsawCaptchaOptions { Shape = (PuzzleShapeKind)999 };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => options.Validate());
+    }
+
+    [Theory]
+    [InlineData(PuzzleShapeKind.Square)]
+    [InlineData(PuzzleShapeKind.Triangle)]
+    [InlineData(PuzzleShapeKind.Hexagon)]
+    [InlineData(PuzzleShapeKind.Circle)]
+    public void Generate_NonClassicShape_CanvasMatchesPieceBodyExactly(PuzzleShapeKind shapeKind)
+    {
+        var options = new JigsawCaptchaOptions { PieceWidth = 60, PieceHeight = 60, Shape = shapeKind };
+
+        CaptchaResult result = _generator.Generate(CreateTestImageBytes(400, 300), options);
+
+        using var piece = Image.Load<Rgba32>(result.PieceImageBytes);
+        Assert.Equal(options.PieceWidth, piece.Width);
+        Assert.Equal(options.PieceHeight, piece.Height);
+        Assert.Equal(shapeKind, result.Shape);
+    }
+
+    [Fact]
+    public void Generate_ClassicShape_ResultReportsTheShapeUsed()
+    {
+        CaptchaResult result = _generator.Generate(CreateTestImageBytes(400, 300));
+
+        Assert.Equal(PuzzleShapeKind.Classic, result.Shape);
+    }
+
+    [Theory]
+    [InlineData(PuzzleShapeKind.Triangle)]
+    [InlineData(PuzzleShapeKind.Hexagon)]
+    [InlineData(PuzzleShapeKind.Circle)]
+    public void Generate_ShapeNotFillingTheBoundingBox_HasTransparentCorners(PuzzleShapeKind shapeKind)
+    {
+        var options = new JigsawCaptchaOptions { PieceWidth = 60, PieceHeight = 60, Shape = shapeKind };
+
+        CaptchaResult result = _generator.Generate(CreateTestImageBytes(400, 300), options);
+
+        using var piece = Image.Load<Rgba32>(result.PieceImageBytes);
+        Assert.Equal(0, piece[0, 0].A);
+        Assert.True(piece[piece.Width / 2, piece.Height / 2].A > 0);
+    }
+
+    [Fact]
+    public void Generate_SquareShape_FillsTheEntireCanvasOpaque()
+    {
+        var options = new JigsawCaptchaOptions { PieceWidth = 60, PieceHeight = 60, Shape = PuzzleShapeKind.Square };
+
+        CaptchaResult result = _generator.Generate(CreateTestImageBytes(400, 300), options);
+
+        using var piece = Image.Load<Rgba32>(result.PieceImageBytes);
+        Assert.True(piece[0, 0].A > 0, "The square shape fills its full bounding box, so the corner must be opaque.");
+    }
+
+    /// <summary>Runtime, per-call shape switching (not just at DI registration time).</summary>
+    [Fact]
+    public void Generate_DifferentShapePerCall_OverridesTheRegisteredDefault()
+    {
+        var generator = new JigsawCaptchaGenerator(new JigsawCaptchaOptions { Shape = PuzzleShapeKind.Classic });
+        byte[] source = CreateTestImageBytes(400, 300);
+
+        CaptchaResult classic = generator.Generate(source);
+        CaptchaResult hexagon = generator.Generate(source, new JigsawCaptchaOptions { Shape = PuzzleShapeKind.Hexagon });
+
+        Assert.Equal(PuzzleShapeKind.Classic, classic.Shape);
+        Assert.Equal(PuzzleShapeKind.Hexagon, hexagon.Shape);
+    }
+
+    /// <summary>
+    /// Every defined <see cref="PuzzleShapeKind"/>, pulled via reflection so a future shape is
+    /// covered automatically instead of relying on someone remembering to add an InlineData row.
+    /// </summary>
+    public static IEnumerable<object[]> AllShapeKinds()
+    {
+        foreach (PuzzleShapeKind kind in Enum.GetValues<PuzzleShapeKind>())
+        {
+            yield return new object[] { kind };
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(AllShapeKinds))]
+    public void Generate_EveryShapeKind_ProducesAValidOpaquePieceReportingItsShape(PuzzleShapeKind shapeKind)
+    {
+        var options = new JigsawCaptchaOptions { PieceWidth = 60, PieceHeight = 60, Shape = shapeKind };
+
+        CaptchaResult result = _generator.Generate(CreateTestImageBytes(400, 300), options);
+        var back = Convert.ToBase64String(result.BackgroundImageBytes);
+        var pi = Convert.ToBase64String(result.PieceImageBytes);
+        using var piece = Image.Load<Rgba32>(result.PieceImageBytes);
+        Assert.Equal(options.PieceWidth, piece.Width);
+        Assert.True(piece.Height >= options.PieceHeight, "The canvas must never be smaller than the piece body.");
+        Assert.Equal(shapeKind, result.Shape);
+        Assert.True(piece[piece.Width / 2, piece.Height / 2].A > 0, "Every shape must be opaque at its centre.");
+    }
+
+    [Theory]
+    [MemberData(nameof(AllShapeKinds))]
+    public void Options_EveryShapeKind_ValidatesSuccessfully(PuzzleShapeKind shapeKind)
+    {
+        var options = new JigsawCaptchaOptions { Shape = shapeKind };
+
+        Exception? exception = Record.Exception(() => options.Validate());
+
+        Assert.Null(exception);
     }
 }

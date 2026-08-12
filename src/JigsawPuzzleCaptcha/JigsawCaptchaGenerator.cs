@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using JigsawPuzzleCaptcha.Contracts;
 using JigsawPuzzleCaptcha.Core;
 using JigsawPuzzleCaptcha.Options;
+using JigsawPuzzleCaptcha.Shapes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
@@ -83,12 +84,10 @@ public sealed class JigsawCaptchaGenerator : IJigsawCaptchaGenerator
 
     private static CaptchaResult Create(Image<Rgba32> source, JigsawCaptchaOptions options)
     {
-        float tabRadius = MathF.Min(options.PieceWidth, options.PieceHeight) * options.TabRatio;
-        int tabOffset = (int)MathF.Ceiling(tabRadius);
-
-        // The canvas is taller than the piece body so the top tab is not clipped off.
-        int canvasWidth = options.PieceWidth;
-        int canvasHeight = options.PieceHeight + tabOffset;
+        // Factory Method: the shape strategy is picked per call from options.Shape, so a caller
+        // can switch shapes at runtime (e.g. per request) without touching DI registration.
+        IPuzzlePieceShape shape = PuzzleShapeFactory.Create(options.Shape);
+        (int canvasWidth, int canvasHeight) = shape.GetCanvasSize(options.PieceWidth, options.PieceHeight, options.TabRatio);
 
         // The slot always sits in the right half, so the piece has room to slide.
         int minX = source.Width / 2;
@@ -111,7 +110,7 @@ public sealed class JigsawCaptchaGenerator : IJigsawCaptchaGenerator
         int targetX = RandomNumberGenerator.GetInt32(minX, maxX + 1);
         int targetY = RandomNumberGenerator.GetInt32(minY, maxY + 1);
 
-        IPath localPath = PuzzlePath.Create(options.PieceWidth, options.PieceHeight, tabRadius, tabOffset);
+        IPath localPath = shape.CreatePath(options.PieceWidth, options.PieceHeight, options.TabRatio);
         IPath targetPath = localPath.Translate(targetX, targetY);
 
         using Image<Rgba32> piece = source.Clone(ctx =>
@@ -146,7 +145,8 @@ public sealed class JigsawCaptchaGenerator : IJigsawCaptchaGenerator
             canvasWidth,
             canvasHeight,
             source.Width,
-            source.Height);
+            source.Height,
+            options.Shape);
     }
 
     /// <summary>
